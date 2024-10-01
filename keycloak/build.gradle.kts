@@ -6,9 +6,10 @@
  */
 
 group = "de.mixxplorer.keycloak.ssc"
-version = "0.1.0"
+version = "0.1.2"
 
-val keycloakVersion by extra("24.0.4")
+val keycloakVersion by extra("26.0.1")
+val keycloakAdapterVersion by extra("25.0.3")
 
 plugins {
     // Apply the java-library plugin for API and implementation separation.
@@ -59,7 +60,7 @@ dependencies {
     implementation("org.keycloak:keycloak-server-spi:$keycloakVersion")
     implementation("org.keycloak:keycloak-server-spi-private:$keycloakVersion")
     implementation("org.keycloak:keycloak-core:$keycloakVersion")
-    implementation("org.keycloak:keycloak-adapter-core:$keycloakVersion")
+    implementation("org.keycloak:keycloak-adapter-core:$keycloakAdapterVersion")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
