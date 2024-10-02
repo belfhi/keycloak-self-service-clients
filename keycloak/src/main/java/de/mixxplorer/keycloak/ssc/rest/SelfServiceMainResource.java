@@ -4,6 +4,7 @@ import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.cors.Cors;
@@ -15,6 +16,7 @@ import static de.mixxplorer.keycloak.ssc.Constants.SSC_MANAGER_CLIENT_ROLE;
 
 public class SelfServiceMainResource {
     private final KeycloakSession keycloakSession;
+    private Cors cors;
 
     public SelfServiceMainResource(KeycloakSession keycloakSession) {
         this.keycloakSession = keycloakSession;
@@ -26,13 +28,18 @@ public class SelfServiceMainResource {
         // Prepare CORS response
         final var httpRequest = keycloakSession.getContext().getHttpRequest();
         final var httpResponse = keycloakSession.getContext().getHttpResponse();
-        var cors = Cors.add(httpRequest).auth().allowedMethods(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE).auth();
+
+        cors = Cors.builder()
+                .auth()
+                .allowedMethods(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE)
+                .auth()
+                .exposedHeaders(Cors.ACCESS_CONTROL_ALLOW_METHODS);
 
         // Do not continue, if the SSC_CLIENT_ID client is not available as this is an invalid configuration
         final var sscClient = this.keycloakSession.clients().getClientByClientId(
                 this.keycloakSession.getContext().getRealm(), SSC_CLIENT_ID);
         if (sscClient == null) {
-            cors.allowAllOrigins().build(httpResponse);
+            cors.allowAllOrigins();
             throw new ForbiddenException(String.format("Self Service Clients not activated on this realm. "
                     + "Please ask your admin to create the %s client.", SSC_CLIENT_ID));
         }
@@ -51,13 +58,13 @@ public class SelfServiceMainResource {
         try {
             authResult = checkPermissionsAndGetUser(sscClient);
         } catch (Exception exc) {
-            cors.allowAllOrigins().build(httpResponse);
+            cors.allowAllOrigins();
             throw exc;
         }
 
         // Add cors options to prepared response, which will be used (implicitly apparently) when building responses
         // downstream.
-        cors.allowedOrigins(authResult.getToken()).build(httpResponse);
+        cors.allowedOrigins(authResult.getToken()).add(Response.ok(httpResponse));
 
         return new SelfServiceResources(this.keycloakSession, authResult);
     }
