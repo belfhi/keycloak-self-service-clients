@@ -1,7 +1,5 @@
 default:
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/gradle:8.7-jdk17
-  tags:
-    - openstack
 
 stages:
   - test
